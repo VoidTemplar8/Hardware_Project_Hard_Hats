@@ -5,10 +5,11 @@ using UnityEngine;
 public class MyMessageListener : MonoBehaviour
 {
     GameObject capsuleModifier;
+    public SerialController serialController;
 
     public GameObject capsule;
     public Light lamp;
-    private bool rotate;
+    private bool jump;
     private float speed;
     private float lightSensed;
 
@@ -16,13 +17,14 @@ public class MyMessageListener : MonoBehaviour
     void Start()
     {
         capsuleModifier = GameObject.Find("Player");
+        serialController = GameObject.Find("Player").GetComponent<SerialController>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        capsule.transform.position += Vector3.forward * speed;
-        if (rotate) capsule.transform.Rotate(0, 0, 10);
+        capsule.transform.position += Vector3.forward * speed * Time.deltaTime;
+        //if (rotate) capsule.transform.Rotate(0, 0, 10);
         lamp.intensity = lightSensed;
     }
 
@@ -30,11 +32,11 @@ public class MyMessageListener : MonoBehaviour
     {
         //  Debug.Log("Message arrived: " + msg);
         string[] msgSplit = msg.Split(',');
-        rotate = (float.Parse(msgSplit[0]) > 0) ? true : false;
+        jump = (float.Parse(msgSplit[0]) > 0) ? true : false;
         speed = (float.Parse(msgSplit[1]) - 512) / 500;
         lightSensed = float.Parse(msgSplit[2]) / 102;
 
-        if (msg == "1")
+        if (jump == true)
         {
             capsuleModifier.gameObject.GetComponent<Rigidbody>().AddForce(0, 100, 0);
         }
@@ -48,5 +50,15 @@ public class MyMessageListener : MonoBehaviour
             Debug.Log("Connection established");
         else
             Debug.Log("Connection attempt failed or disconnection detected");
+    }
+    
+    void OnTriggerEnter(Collider other)
+    {
+        serialController.SendSerialMessage("E");
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        serialController.SendSerialMessage("A");
     }
 }
